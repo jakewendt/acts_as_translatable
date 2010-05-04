@@ -1,13 +1,11 @@
-ActsAsTranslatable
-==================
+= ActsAsTranslatable
 
-Introduction goes here.
+Adds a few extra columns and adds translation references to itself.
 
 
-Example
-=======
+== Example
 
 Example goes here.
 
 
-Copyright (c) 2010 [name of plugin creator], released under the MIT license
+Copyright (c) 2010 [Jake Wendt], released under the MIT license
