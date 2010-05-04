@@ -61,28 +61,76 @@ class ActsAsTranslatableTest < ActiveSupport::TestCase
 		} }
 	end
 
-	test "should create page with translation" do
-		assert_difference('Page.count',3) {
-			page = create_page(:title => 'original',
-				:translations_attributes => [
-					{:title => 'translated title 1'},
-					{:title => 'translated title 2'}
-				]
-#	These translations are invalid as they have no locale
-#	but apparently the error doesn't get raised on creation.
-#	A check afterward shows that they do fail validation.
-#		WTF
-			)
-puts page.errors.inspect
-puts page.inspect
-puts page.translations.inspect
-t = page.translations.first
-puts t.valid?
-puts t.errors.inspect
-		}
-	end
+#	test "should create page with translations" do
+#		assert_difference('Page.count',3) {
+#			page = create_page(:title => 'original',
+#				:translations_attributes => [
+#					{:title => 'translated title 1',:locale => 'sp'},
+#					{:title => 'translated title 2',:locale => 'fr'}
+#				]
+#			)
+#		}
+#	end
+
+#	test "should require unique locales for translations using translations_attributes" do
+#		assert_difference('Page.count',0) {
+#			page = create_page(:title => 'original',:body=> 'testing',
+#				:translations_attributes => [
+#					{:title => 'translated title 1', :locale => 'sp'},
+#					{:title => 'translated title 2', :locale => 'sp'}
+#				]
+#			)
+##			assert page.errors.on('translations.locale')
+#puts page.inspect
+#puts page.translations.inspect
+#		}
+#	end
+
+#	test "should require locales for translations using translations_attributes" do
+#		assert_difference('Page.count',0) {
+#			page = create_page(:title => 'original',:body=> 'testing',
+#				:translations_attributes => [
+#					{:title => 'translated title 1'},
+#					{:title => 'translated title 2'}
+#				]
+#			)
+#			assert page.errors.on('translations.locale')
+#		}
+#	end
 
 	test "should destroy all translations on destroy" do
+	end
+
+	test "should get translation of translatable" do
+#		page = create_page(:title => 'original',
+#			:translations_attributes => [
+#				{:title => 'translated title 1',:locale => 'sp'},
+#				{:title => 'translated title 2',:locale => 'fr'}
+#			]
+#		)
+		page = create_page(:title => 'original')
+		page.translations << create_page(
+			:title => 'translated title 1',:locale => 'sp')
+		page.translations << create_page(
+			:title => 'translated title 2',:locale => 'fr')
+		translation = page.translate('sp')
+		assert_equal translation.locale, 'sp'
+	end
+
+	test "should return self if translation locale doesn't exist" do
+#		page = create_page(:title => 'original',
+#			:translations_attributes => [
+#				{:title => 'translated title 1',:locale => 'sp'},
+#				{:title => 'translated title 2',:locale => 'fr'}
+#			]
+#		)
+		page = create_page(:title => 'original')
+		page.translations << create_page(
+			:title => 'translated title 1',:locale => 'sp')
+		page.translations << create_page(
+			:title => 'translated title 2',:locale => 'fr')
+		translation = page.translate('ru')
+		assert_equal translation.locale, nil
 	end
 
 protected
