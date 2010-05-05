@@ -49,7 +49,8 @@ def teardown_db
 end
 
 class Page < ActiveRecord::Base
-	attr_accessible :title, :body
+	attr_accessible :path, :title, :body
+	validates_uniqueness_of :path, :scope => :locale
 	acts_as_translatable :this_is_a => :test
 end
 
