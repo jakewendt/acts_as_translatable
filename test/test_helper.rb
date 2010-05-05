@@ -50,7 +50,7 @@ end
 
 class Page < ActiveRecord::Base
 	attr_accessible :title, :body
-	acts_as_translatable
+	acts_as_translatable :this_is_a => :test
 end
 
 class ActiveSupport::TestCase

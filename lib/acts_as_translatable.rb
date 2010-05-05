@@ -7,8 +7,13 @@ module Acts #:nodoc:
 
 		module InitialClassMethods
 			def acts_as_translatable(options = {})
-#				configuration = { }
-#				configuration.update(options) if options.is_a?(Hash)
+				#	There has to be a cleaner, more correct way
+				#	to do this, but it works.
+				class_eval <<-EOV
+				cattr_reader :translatable_options
+				@@translatable_options = { :default_locale => :en }
+				@@translatable_options.update(options) if options.is_a?(Hash)
+				EOV
 
 				include Acts::Translatable::InstanceMethods
 				extend  Acts::Translatable::ClassMethods
@@ -18,12 +23,14 @@ module Acts #:nodoc:
 
 				has_many :translations, 
 					:class_name  => self.class_name,
-					:foreign_key => 'translatable_id'
+					:foreign_key => 'translatable_id',
+					:dependent => :delete_all
 
-#				ANAF creates a lot of headaches and impossible validations
-#				accepts_nested_attributes_for :translations
-
-#				attr_accessor :require_locale
+				#	as a translatable is a translation of itself,
+				#		:dependent => :destroy 
+				#	creates an infinite loop
+				#	If associations need a destroy, an after or before
+				#	destroy macro method should be created.
 
 				if self.accessible_attributes
 					attr_accessible :locale
@@ -31,53 +38,45 @@ module Acts #:nodoc:
 					attr_accessible :translations_attributes
 				end
 
-				validates_presence_of :locale, :if => :translatable
-				validates_presence_of :locale, :if => :translatable_id
-#				validates_presence_of :locale, :if => :require_locale
-
-				#
-				#	When using 
-				#		accepts_nested_attributes_for :translations
-				#	and
-				#		Page.new(..... :translations_attributes => [])
-				#	this doesn't stop creation with invalid translation?
-				#	But will return false with valid? call on translation post save?
-				#
-				#	This appears to be due to the fact that translatable_id
-				#	isn't set until AFTER validation.  A translation doesn't know
-				#	that it is a translation until after it is saved and
-				#	becomes a translation.  Initially, it is translatable.
-				#
-				#	I added a :require_locale method to use as a flag.
-				#
-				#	There is also no guarantee that they are unique
-				#	as none of them have been saved yet.
-				#
-				#	Perhaps I should disallow the :ANAF functionality?
-				#
+#				validates_presence_of :locale, :if => :translatable
+#				validates_presence_of :locale, :if => :translatable_id
 
 				validates_uniqueness_of :locale, 
 					:scope => :translatable_id
 
-#				before_validation :translations_require_locale
-
+				before_create :set_locale
+				after_create  :set_translatable
 			end
 		end
 
 		module ClassMethods
+
+			def default_locale
+				translatable_options[:default_locale].to_s || "en"
+			end
+
 		end 
 
 		module InstanceMethods
-#			def translations_require_locale
-#				self.translations.each do |t|
-#					t.require_locale = true
-#				end
-#			end
 
 			def translate(locale)
 				self.translations.find(:first, 
 					:conditions => {:locale => locale}) || self
 			end
+
+		protected
+
+			def set_locale
+				self.locale ||= self.class.default_locale
+				#	no save needed as this is a before_create
+			end
+
+			def set_translatable
+				self.translatable_id ||= self.id
+				#	as this is an after_create, save is needed
+				save(false)
+			end
+
 		end 
 	end
 end
