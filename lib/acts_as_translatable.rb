@@ -40,7 +40,7 @@ module Acts #:nodoc:
 				if self.accessible_attributes
 					attr_accessible :locale
 					attr_accessible :translatable_id
-					attr_accessible :translations_attributes
+#					attr_accessible :translations_attributes
 				end
 
 #				validates_presence_of :locale, :if => :translatable
